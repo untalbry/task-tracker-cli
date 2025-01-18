@@ -16,7 +16,7 @@ task_manager() {
         case "$option" in
             "add")
                 # TODO: Handle add logic here
-                echo "Adding task..."
+                add "$@"
                 ;;
             "update")
                 # TODO: Handle update logic here
@@ -36,6 +36,29 @@ task_manager() {
         return 1
     fi
 }
+add(){
+    if [[ $# -eq 2 ]]; then
+        description=$2
+        id=$(get_next_id)
+        status="todo"
+        current_date=$(date "+%Y-%m-%d")
+        updatedAt=$(date "+%Y-%m-%d")
+        echo "adding to tasks: $description"
+    else 
+        echo "ERROR: add: Missing argument"
+        return 1
+    fi
+}
+get_next_id(){
+    current_id=$(cat "$ID_FILE")
+    next_id=$((current_id + 1))
+    echo "$next_id" > "$ID_FILE"
+    echo "$next_id"  
+}
 
+ID_FILE="./files/task_id.txt"
+if [[ ! -f "$ID_FILE" ]]; then
+    echo 1 > "$ID_FILE"
+fi
 # Start 
 task_manager "$@"
