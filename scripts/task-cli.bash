@@ -15,7 +15,6 @@ task_manager() {
         
         case "$option" in
             "add")
-                # TODO: Handle add logic here
                 add "$@"
                 ;;
             "update")
@@ -36,6 +35,7 @@ task_manager() {
         return 1
     fi
 }
+
 add(){
     if [[ $# -eq 2 ]]; then
         description=$2
@@ -43,22 +43,53 @@ add(){
         status="todo"
         current_date=$(date "+%Y-%m-%d")
         updatedAt=$(date "+%Y-%m-%d")
-        echo "adding to tasks: $description"
+        
+        TASK_FILE="./tasks/tasks.json"
+        ID_FILE="./files/task_id.txt"
+
+        # Crear directorios si no existen
+        if [[ ! -d "./tasks" ]]; then
+            mkdir -p "./tasks"
+            echo "Directory ./tasks created."
+        fi
+
+        if [[ ! -d "./files" ]]; then
+            mkdir -p "./files"
+            echo "Directory ./files created."
+        fi
+
+        # Verifica si el archivo JSON existe, si no, lo crea
+        if [[ ! -f "$TASK_FILE" ]]; then
+            echo '{"tasks": []}' > "$TASK_FILE"  # Crea un archivo con un objeto vacío si no existe
+        fi
+
+        # Generar y añadir la nueva tarea al array "tasks"
+        jq --arg id "$id" \
+           --arg description "$description" \
+           --arg status "$status" \
+           --arg createdAt "$current_date" \
+           --arg updatedAt "$updatedAt" \
+           '.tasks += [{"id": $id, "description": $description, "status": $status, "createdAt": $createdAt, "updatedAt": $updatedAt}]' \
+           "$TASK_FILE" > "$TASK_FILE.temp" && mv "$TASK_FILE.temp" "$TASK_FILE" || { echo "Error al actualizar el archivo JSON"; exit 1; }
+        
+        echo "Added to tasks: $description"
+
     else 
         echo "ERROR: add: Missing argument"
         return 1
     fi
 }
+
 get_next_id(){
+    ID_FILE="./files/task_id.txt"
+    if [[ ! -f "$ID_FILE" ]]; then
+        echo 1 > "$ID_FILE"  # Inicializa el contador de ID si no existe
+    fi
     current_id=$(cat "$ID_FILE")
     next_id=$((current_id + 1))
-    echo "$next_id" > "$ID_FILE"
-    echo "$next_id"  
+    echo "$next_id" > "$ID_FILE"  # Guarda el próximo ID
+    echo "$next_id"
 }
 
-ID_FILE="./files/task_id.txt"
-if [[ ! -f "$ID_FILE" ]]; then
-    echo 1 > "$ID_FILE"
-fi
 # Start 
 task_manager "$@"
