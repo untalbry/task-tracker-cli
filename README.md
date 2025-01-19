@@ -1,4 +1,5 @@
 # BASH TASK CLI 
+![GitHub last commit](https://img.shields.io/github/last-commit/untalbry/task-tracker-cli)
 
 ## How to use:
 
